@@ -176,31 +176,42 @@ def create_app(test_config=None):
         '''
         # Get the body from the request object
         body = request.get_json()
-        # Get the data from the body
-        new_question = body.get('question', None)
-        new_answer = body.get('answer', None)
-        new_category = body.get('category', None)
-        new_difficulty = body.get('difficulty', None)
+        
+        # Get the searchTerm
         search = body.get('searchTerm', None)
 
-        try:
-            # If there is a search term in the body return the questions with matched search term
-            if search:
-                # Get questions with matched search term
-                selection = Question.query.order_by(Question.id).filter(
-                    Question.question.ilike('%{}%'.format(search)))
-                # Paginate the questions
-                current_questions = paginate_questions(request, selection)
+        
+        # If there is a search term in the body return the questions with matched search term
+        if search:
+            # Get questions with matched search term
+            selection = Question.query.order_by(Question.id).filter(
+                Question.question.ilike('%{}%'.format(search)))
 
-                # Return Data to view
-                return jsonify({
-                    'success': True,
-                    'questions': current_questions,
-                    'total_questions': len(selection.all())
-                })
+            if len(selection.all()) == 0:
+                abort(404)
 
-            else:
-                # If there is no search then we need to create a new question
+            # Paginate the questions
+            current_questions = paginate_questions(request, selection)
+
+            # Return Data to view
+            return jsonify({
+                'success': True,
+                'questions': current_questions,
+                'total_questions': len(selection.all())
+            })
+
+        else:
+            try:
+                # Get the data from the body
+                new_question = body.get('question', None)
+                new_answer = body.get('answer', None)
+                new_category = body.get('category', None)
+                new_difficulty = body.get('difficulty', None)
+
+                # Abort if any of the required data for new question is None with status code 422
+                if any(item is None for item in [new_question, new_answer, new_category, new_difficulty]):
+                    abort(422)
+
                 # Create a new question object and add it to the data base
                 question = Question(question=new_question, answer=new_answer, category=new_category, difficulty=new_difficulty)
                 question.insert()
@@ -220,9 +231,9 @@ def create_app(test_config=None):
                     'total_questions': len(selection)
                 })
 
-        except:
-            # Abort with status code 422 unprocessable
-            abort(422)
+            except:
+                # Abort with status code 422 unprocessable
+                abort(422)
 
     '''
     @Done: 
