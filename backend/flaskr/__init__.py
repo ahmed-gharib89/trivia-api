@@ -14,7 +14,7 @@ QUESTIONS_PER_PAGE = 10
 def paginate_questions(request, selection, page_num=1):
     # Get the page number or use the default (first page)
     page = request.args.get('page', page_num, type=int)
-    # Start question number 
+    # Start question number
     start = (page - 1) * QUESTIONS_PER_PAGE
     # End question number
     end = start + QUESTIONS_PER_PAGE
@@ -24,7 +24,7 @@ def paginate_questions(request, selection, page_num=1):
     # Select only 10 questions to view per page
     current_questions = questions[start:end]
 
-    # Return the current questions 
+    # Return the current questions
     return current_questions
 
 
@@ -47,7 +47,7 @@ def create_app(test_config=None):
         response.headers.add('Access-Control-Allow-Headers',
                              'Content-Type, Authorization, true')
         response.headers.add('Access-Control-Allow-Methods',
-                              'GET, PUT, POST, DELETE, OPTIONS')
+                             'GET, PUT, POST, DELETE, OPTIONS')
         # Return the response object after adding the access control
         return response
 
@@ -77,7 +77,6 @@ def create_app(test_config=None):
             'categories': cat_dict,
         })
 
-
     '''
     @Done:
     Create an endpoint to handle GET requests for questions,
@@ -105,7 +104,6 @@ def create_app(test_config=None):
         # Getting all categories from the database and format it
         categories = Category.query.order_by(Category.id).all()
         cat_dict = {cat.id: cat.type for cat in categories}
-        
 
         # abort 404 if no questions
         if (len(current_questions) == 0):
@@ -118,7 +116,6 @@ def create_app(test_config=None):
             'total_questions': len(selection),
             'categories': cat_dict,
         })
-
 
     '''
     @Done: 
@@ -134,7 +131,8 @@ def create_app(test_config=None):
         '''
         try:
             # Get the question from the database by question_id
-            question = Question.query.filter(Question.id == question_id).one_or_none()
+            question = Question.query.filter(
+                Question.id == question_id).one_or_none()
 
             # Abort if no question retrieved from the database with error status code 404 not found
             if question is None:
@@ -176,11 +174,10 @@ def create_app(test_config=None):
         '''
         # Get the body from the request object
         body = request.get_json()
-        
+
         # Get the searchTerm
         search = body.get('searchTerm', None)
 
-        
         # If there is a search term in the body return the questions with matched search term
         if search:
             # Get questions with matched search term
@@ -213,7 +210,8 @@ def create_app(test_config=None):
                     abort(422)
 
                 # Create a new question object and add it to the data base
-                question = Question(question=new_question, answer=new_answer, category=new_category, difficulty=new_difficulty)
+                question = Question(question=new_question, answer=new_answer,
+                                    category=new_category, difficulty=new_difficulty)
                 question.insert()
 
                 # Get the questions from the data base
@@ -221,7 +219,8 @@ def create_app(test_config=None):
                 # Get the last page number to show the created quistion
                 page_num = ceil(len(selection) / 10)
                 # Paginate the questions and view the last page
-                current_questions = paginate_questions(request, selection, page_num=page_num)
+                current_questions = paginate_questions(
+                    request, selection, page_num=page_num)
 
                 # Return data to view
                 return jsonify({
@@ -261,14 +260,16 @@ def create_app(test_config=None):
         '''
 
         # Get the category by category_id or return none if failed
-        category = Category.query.filter(Category.id == category_id).one_or_none()
+        category = Category.query.filter(
+            Category.id == category_id).one_or_none()
 
         # Abort with status code 400 for bad request if category wasn't found
         if (category is None):
             abort(400)
 
         # Get only the question for this category
-        selection = Question.query.filter(Question.category == category.id).all()
+        selection = Question.query.filter(
+            Question.category == category.id).all()
 
         # Get current questions to view
         current_questions = paginate_questions(request, selection)
@@ -314,16 +315,18 @@ def create_app(test_config=None):
         # Get the category id
         category_id = quiz_category['id']
 
-        # Get questions for all categories if all was selected 
+        # Get questions for all categories if all was selected
         if (category_id == 0):
             questions = Question.query
         # or Get question for selected category
         else:
-            questions = Question.query.filter(Question.category == quiz_category['id'])
+            questions = Question.query.filter(
+                Question.category == quiz_category['id'])
 
         # if there is previouse_questions filter them from questions
         if len(previous_questions) != 0:
-            questions = questions.filter(~Question.id.in_(previous_questions)).all()
+            questions = questions.filter(
+                ~Question.id.in_(previous_questions)).all()
         else:
             questions = questions.all()
 
@@ -340,7 +343,6 @@ def create_app(test_config=None):
             'success': True,
             'question': question.format()
         })
-
 
     '''
     @Done: 
@@ -378,6 +380,5 @@ def create_app(test_config=None):
             'error': 422,
             'message': "unprocessable"
         }), 422
-
 
     return app
